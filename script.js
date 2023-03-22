@@ -4,62 +4,65 @@ newDiv.innerHTML =`
 <div>Module 1 Technical Interview</div>
 <div>Learner name: name</div>
 <div>Date: test day</div>`;
-
+const API_URL = 'http://171.244.60.204:8080/jobs?_page=1&_limit=10';
 head.insertAdjacentHTML('afterbegin', newDiv.innerHTML);
-const API_URL = 'http://171.244.60.204:8080/jobs'
 
-const fetchJobTitle = async () => {
+const fetchJobTitle = async (pageNumber) => {
   try {
-fetch(API_URL)
-.then((res) => res.json())
-.then((data) => {
-  console.log(data);
-} catch (err) {
-  console.log("err", err);
-}
+  const url = `${API_URL}&_page=${pageNumber}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log (data)
+  return data;
+  } catch (error) {
+    console.log("err", error);
+  }
 };
 
-fetch(API_URL).then((result) => console.log(result))
+console.log(fetchJobTitle(API_URL));
 
-const renderJobTitle = async (jobs) => {
-  try {
-    const data = await fetch(API_URL);
-    const listEl = document.querySelector('.listEl');
-    result.forEach(search => {
-    listEl.innerHTML.appendChild(`<li>${search.title}</li>`);
-  })
-} catch (err) {
-  console.log("err", err);
-}
+const renderJobTitles = async (pageNumber) => {
+    const data = await fetchJobTitle(pageNumber);
+    const listEl = document.querySelector('#listEl');
+    listEl.innerHTML = "";
+    data.forEach(job => { 
+      const title = `<li>${job.title}</li>`;
+      listEl.insertAdjacentHTML('beforeend', title); 
+    });
 };
 
-
-const searchButton = document.querySelector('.searchBtn');
-const searchInput = document.querySelector('.searchInput');
-const value = searchInput.value.trim();
-
-const clickHandler = async (endpoint) {
-  const data = await fetch(${API_URL}+'/jobs?q='${value})
-  renderJobTitle();
-};
-
-searchButton.addEventListener('click', clickHandler());
+renderJobTitles(1);
 
 const previousBtn = document.querySelector('.previous');
 const nextBtn = document.querySelector('.next');
 let pageNumber = 1;
-previousBtn.addEventListener('click', () => {
+
+previousBtn.addEventListener('click', async () => {
   if (pageNumber > 1) {
       pageNumber--;
-  } else {
-      return;
-  }
-  console.log(pageNumber);
-  renderJobTitle();
+      console.log(pageNumber);
+      renderJobTitles(pageNumber);
+    }
+  });
+
+  nextBtn.addEventListener('click', async () => {
+    pageNumber++;
+    console.log(pageNumber);
+    renderJobTitles(pageNumber);
+  });
+
+const searchButton = document.querySelector('#searchButton');
+const searchInput = document.querySelector('#searchInput');
+
+searchButton.addEventListener('click', async (e) => {
+  const value = searchInput.value.trim();
+  const searchResults = await fetchJobTitle(`${API_URL}?q=${value}`);
+  const listEl = document.querySelector('#listEl');
+    listEl.innerHTML = "";
+    searchResults.forEach(job => { 
+      const title = `<li>${job.title}</li>`;
+      listEl.insertAdjacentHTML('beforeend', title); 
+    });
 });
 
-nextBtn.addEventListener('click', () => {
-  pageNumber++;
-  console.log(pageNumber);
-  renderJobTitle();
-});
+
