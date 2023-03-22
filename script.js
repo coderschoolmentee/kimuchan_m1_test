@@ -14,10 +14,10 @@ fetch(API_URL)
 .then((res) => res.json())
 .then((data) => {
   console.log(data);
-})
-} catch((err) => {
-  console.err(err);
-});
+} catch (err) {
+  console.log("err", err);
+}
+};
 
 fetch(API_URL).then((result) => console.log(result))
 
