@@ -1,68 +1,85 @@
-const newDiv = document.createElement('div');
-const head = document.querySelector('.head');
-newDiv.innerHTML =`
+const newDiv = document.createElement("div");
+const head = document.querySelector(".head");
+newDiv.innerHTML = `
 <div>Module 1 Technical Interview</div>
 <div>Learner name: name</div>
 <div>Date: test day</div>`;
-const API_URL = 'http://171.244.60.204:8080/jobs?_page=1&_limit=10';
-head.insertAdjacentHTML('afterbegin', newDiv.innerHTML);
+head.insertAdjacentHTML("afterbegin", newDiv.innerHTML);
 
-const fetchJobTitle = async (pageNumber) => {
+const buildApiUrl = (page = 1, limit = 10, searchValue = "") => {
+  const baseUrl = "http://171.244.60.204:8080/jobs";
+  return `${baseUrl}?_page=${page}&_limit=${limit}&q=${searchValue}`;
+};
+let pageNumber = 1;
+
+const updatePaginationButtons = () => {
+  const previousBtn = document.querySelector("#previous");
+  const nextBtn = document.querySelector("#next");
+
+  if (pageNumber <= 1) {
+    previousBtn.parentElement.classList.add("disabled");
+  } else {
+    previousBtn.parentElement.classList.remove("disabled");
+  }
+};
+
+const fetchJobTitle = async (value = "", page = 1) => {
   try {
-  const url = `${API_URL}&_page=${pageNumber}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  console.log (data)
-  return data;
+    const url = buildApiUrl(page, 10, value);
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log(data);
+    return data;
   } catch (error) {
     console.log("err", error);
   }
 };
 
-console.log(fetchJobTitle(API_URL));
+fetchJobTitle();
 
-const renderJobTitles = async (pageNumber) => {
-    const data = await fetchJobTitle(pageNumber);
-    const listEl = document.querySelector('#listEl');
-    listEl.innerHTML = "";
-    data.forEach(job => { 
-      const title = `<li>${job.title}</li>`;
-      listEl.insertAdjacentHTML('beforeend', title); 
-    });
+const renderJobTitles = async (searchValue = "", page = "1") => {
+  const data = await fetchJobTitle(searchValue, page);
+  const listEl = document.querySelector("#listEl");
+  listEl.innerHTML = "";
+  data.forEach((job) => {
+    const title = `<li>${job.title}</li>`;
+    listEl.insertAdjacentHTML("beforeend", title);
+  });
+  updatePaginationButtons();
 };
 
-renderJobTitles(1);
+const searchButton = document.querySelector("#searchButton");
+const previousBtn = document.querySelector("#previous");
+const nextBtn = document.querySelector("#next");
+const searchInput = document.querySelector("#searchInput");
+const pageNumberButtons = document.querySelectorAll(".page-number");
 
-const previousBtn = document.querySelector('.previous');
-const nextBtn = document.querySelector('.next');
-let pageNumber = 1;
-
-previousBtn.addEventListener('click', async () => {
-  if (pageNumber > 1) {
-      pageNumber--;
-      console.log(pageNumber);
-      renderJobTitles(pageNumber);
-    }
-  });
-
-  nextBtn.addEventListener('click', async () => {
-    pageNumber++;
-    console.log(pageNumber);
-    renderJobTitles(pageNumber);
-  });
-
-const searchButton = document.querySelector('#searchButton');
-const searchInput = document.querySelector('#searchInput');
-
-searchButton.addEventListener('click', async (e) => {
-  const value = searchInput.value.trim();
-  const searchResults = await fetchJobTitle(`${API_URL}?q=${value}`);
-  const listEl = document.querySelector('#listEl');
-    listEl.innerHTML = "";
-    searchResults.forEach(job => { 
-      const title = `<li>${job.title}</li>`;
-      listEl.insertAdjacentHTML('beforeend', title); 
-    });
+searchButton.addEventListener("click", (e) => {
+  const value = searchInput.value;
+  pageNumber = 1;
+  renderJobTitles(value, pageNumber.toString());
 });
 
+previousBtn.addEventListener("click", async (e) => {
+  e.preventDefault();
+  if (pageNumber > 1) {
+    pageNumber--;
+    renderJobTitles("", pageNumber.toString());
+  }
+});
 
+nextBtn.addEventListener("click", async (e) => {
+  e.preventDefault();
+  pageNumber++;
+  renderJobTitles("", pageNumber.toString());
+});
+
+pageNumberButtons.forEach((button) => {
+  button.addEventListener("click", (e) => {
+    e.preventDefault();
+    pageNumber = parseInt(button.textContent);
+    renderJobTitles("", pageNumber);
+  });
+});
+
+renderJobTitles();
